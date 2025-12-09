@@ -1,0 +1,18 @@
+﻿services:
+  database:
+    image: postgres:17
+    environment:
+      - POSTGRES_USER=developer
+      - POSTGRES_DB=db_orders
+      - POSTGRES_PASSWORD=goida
+    ports:
+      - "5434:5432"
+    volumes:
+      - database.volume:/var/lib/postgresql/data
+volumes:
+  database.volume:  gateway:
+    image: gateway
+    build:
+      context: .
+      dockerfile: GateWay/Dockerfile
+

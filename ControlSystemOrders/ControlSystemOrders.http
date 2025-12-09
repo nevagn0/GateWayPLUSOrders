@@ -1,0 +1,6 @@
+@ControlSystemOrders_HostAddress = http://localhost:5290
+
+GET {{ControlSystemOrders_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
