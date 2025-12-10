@@ -15,5 +15,18 @@
       context: .
       dockerfile: GateWay/Dockerfile
 
+  order.service:
+    image: order.service:latest
+    build:
+      context: .
+      dockerfile: ControlSystemOrders/Dockerfile
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_HTTP_PORTS=5002
+      - ConnectionStrings__DefaultConnection=Host=database;Port=5432;Database=db;Username=developer;Password=goida
+    ports:
+      - "5002:5002"
+    depends_on:
+      - database
 volumes:
   database.volume:

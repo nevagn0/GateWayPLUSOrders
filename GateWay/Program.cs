@@ -1,26 +1,31 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Yarp.ReverseProxy.Transforms;
 using Yarp.ReverseProxy.Transforms.Builder;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Configuration.AddJsonFile("appsettings.json");
+
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"))
+    .AddTransforms<CustomTransformProvider>();
+
 var app = builder.Build();
+
 app.MapReverseProxy();
 
 app.Run();
 
 public class CustomTransformProvider : ITransformProvider
 {
-    private ITransformProvider _transformProviderImplementation;
-
     public void ValidateRoute(TransformRouteValidationContext context)
     {
-        _transformProviderImplementation.ValidateRoute(context);
     }
 
     public void ValidateCluster(TransformClusterValidationContext context)
     {
-        _transformProviderImplementation.ValidateCluster(context);
     }
 
     public void Apply(TransformBuilderContext context)
@@ -36,14 +41,21 @@ public class CustomTransformProvider : ITransformProvider
                 transformContext.ProxyRequest.Headers.TryAddWithoutValidation("Authorization", $"Bearer {cookieToken}");
             }
             
+            // Проброс всех кук
             var cookies = transformContext.HttpContext.Request.Cookies;
             foreach (var cookie in cookies)
             {
                 transformContext.ProxyRequest.Headers.TryAddWithoutValidation("Cookie", $"{cookie.Key}={cookie.Value}");
             }
             
+            // X-Forwarded заголовки
             transformContext.ProxyRequest.Headers.TryAddWithoutValidation("X-Forwarded-Host", transformContext.HttpContext.Request.Host.Host);
             transformContext.ProxyRequest.Headers.TryAddWithoutValidation("X-Forwarded-Proto", transformContext.HttpContext.Request.Scheme);
+            
+            // Добавляем Request-ID для трассировки
+            var requestId = Guid.NewGuid().ToString();
+            transformContext.ProxyRequest.Headers.TryAddWithoutValidation("X-Request-ID", requestId);
+            transformContext.HttpContext.Response.Headers.TryAdd("X-Request-ID", requestId);
         });
     }
 }
