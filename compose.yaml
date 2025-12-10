@@ -9,10 +9,11 @@
       - "5434:5432"
     volumes:
       - database.volume:/var/lib/postgresql/data
-volumes:
-  database.volume:  gateway:
+  gateway:
     image: gateway
     build:
       context: .
       dockerfile: GateWay/Dockerfile
 
+volumes:
+  database.volume:
